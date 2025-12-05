@@ -269,9 +269,9 @@ const FloorPlanGeneratorApp = ({ userEmail, onLogout }: { userEmail: string, onL
   const [selectedStyle, setSelectedStyle] = useState<StylePreset | null>(null);
   const [rooms, setRooms] = useState([{ id: 1, name: '', type: 'Bedroom' }]);
 
-  // Payment State
+  // Payment State - Default to 3 Free Credits
   const [credits, setCredits] = useState(() => {
-    const saved = localStorage.getItem('floor-plan-credits');
+    const saved = localStorage.getItem('dream-canvas-credits');
     return saved ? parseInt(saved, 10) : 3;
   });
   const [showPayment, setShowPayment] = useState(false);
@@ -305,7 +305,7 @@ const FloorPlanGeneratorApp = ({ userEmail, onLogout }: { userEmail: string, onL
   const maskPaths = useRef<Array<Array<{x: number, y: number}>>>([]);
 
   useEffect(() => {
-    localStorage.setItem('floor-plan-credits', credits.toString());
+    localStorage.setItem('dream-canvas-credits', credits.toString());
   }, [credits]);
 
   useEffect(() => {
@@ -671,12 +671,14 @@ const FloorPlanGeneratorApp = ({ userEmail, onLogout }: { userEmail: string, onL
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!prompt || isLoading) return;
-
+    
+    // Strict Credit Check: If 0 credits, open payment modal and stop.
     if (credits <= 0) {
         setShowPayment(true);
         return;
     }
+
+    if (!prompt || isLoading) return;
 
     if ((mode === 'image-to-image' || mode === 'image-to-interior' || mode === 'outline') && !inputImage) {
         setError(`Please upload an image for ${mode} mode.`);
@@ -1723,9 +1725,16 @@ Rooms to include:\n${roomDescriptions}`;
             <button
               type="submit"
               className="generate-button"
-              disabled={isLoading || !prompt || ((mode === 'image-to-image' || mode === 'image-to-interior' || mode === 'outline') && !inputImage) || (mode === 'architectural' && rooms.some(r => !r.name))}
+              disabled={
+                isLoading || 
+                (credits > 0 && (
+                    !prompt || 
+                    ((mode === 'image-to-image' || mode === 'image-to-interior' || mode === 'outline') && !inputImage) || 
+                    (mode === 'architectural' && rooms.some(r => !r.name))
+                ))
+              }
             >
-              {isLoading ? 'Generating...' : `Generate (1 Credit)`}
+              {isLoading ? 'Generating...' : credits <= 0 ? 'Refill Credits to Continue' : `Generate (1 Credit)`}
             </button>
           </form>
       </section>
@@ -1737,7 +1746,7 @@ Rooms to include:\n${roomDescriptions}`;
 const App = () => {
     const [user, setUser] = useState<{ email: string } | null>(() => {
         try {
-            const savedUser = localStorage.getItem('floor-plan-generator-user');
+            const savedUser = localStorage.getItem('dream-canvas-user');
             return savedUser ? JSON.parse(savedUser) : null;
         } catch (error) {
             console.error("Failed to parse user from localStorage", error);
@@ -1747,9 +1756,9 @@ const App = () => {
 
     useEffect(() => {
         if (user) {
-            localStorage.setItem('floor-plan-generator-user', JSON.stringify(user));
+            localStorage.setItem('dream-canvas-user', JSON.stringify(user));
         } else {
-            localStorage.removeItem('floor-plan-generator-user');
+            localStorage.removeItem('dream-canvas-user');
         }
     }, [user]);
 
