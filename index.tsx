@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { GoogleGenAI, Modality, Type } from '@google/genai';
 import './index.css';
 
-type Mode = 'text-to-image' | 'image-to-interior' | 'architectural' | 'outline';
+type Mode = 'text-to-image' | 'image-to-image' | 'image-to-interior' | 'architectural' | 'outline';
 type StylePreset = 'photorealistic' | 'cartoon' | 'watercolor' | 'cyberpunk';
 type FilterType = 'grayscale' | 'sepia' | 'invert';
 type ViewMode = 'render' | 'groundTruth';
@@ -63,7 +63,7 @@ const Login = ({ onLogin }: { onLogin: (email: string) => void }) => {
   return (
     <div className="login-container">
       <div className="login-box">
-        <h1 className="login-title">Floor plan Generator</h1>
+        <h1 className="login-title">Dream Canvas</h1>
         <p className="login-tagline">Welcome. Let's create something beautiful.</p>
         <form onSubmit={handleAuth}>
           {error && <p className="login-error">{error}</p>}
@@ -93,6 +93,167 @@ const Login = ({ onLogin }: { onLogin: (email: string) => void }) => {
   );
 };
 
+interface PaymentModalProps {
+  onClose: () => void;
+  onSuccess: (amount: number) => void;
+}
+
+const PaymentModal = ({ onClose, onSuccess }: PaymentModalProps) => {
+  const [currency, setCurrency] = useState<'USD' | 'BDT'>('USD');
+  const [selectedPlanId, setSelectedPlanId] = useState<number>(2);
+  const [paymentMethod, setPaymentMethod] = useState<string>('card');
+  const [processing, setProcessing] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+
+  const plans = {
+    USD: [
+      { id: 1, credits: 10, price: 5, label: '$5.00' },
+      { id: 2, credits: 50, price: 20, label: '$20.00' },
+      { id: 3, credits: 100, price: 35, label: '$35.00' },
+    ],
+    BDT: [
+      { id: 1, credits: 10, price: 600, label: '৳600' },
+      { id: 2, credits: 50, price: 2500, label: '৳2,500' },
+      { id: 3, credits: 100, price: 4500, label: '৳4,500' },
+    ]
+  };
+
+  const currentPlans = plans[currency];
+  const selectedPlan = currentPlans.find(p => p.id === selectedPlanId) || currentPlans[1];
+
+  const handlePay = (e: React.FormEvent) => {
+    e.preventDefault();
+    setProcessing(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+        setProcessing(false);
+        onSuccess(selectedPlan.credits);
+    }, 2000);
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content payment-modal">
+        <div className="modal-header">
+          <h2>Add Credits</h2>
+          <button onClick={onClose} className="close-modal-button">&times;</button>
+        </div>
+        
+        <div className="currency-toggle-container">
+            <label>Currency:</label>
+            <div className="currency-toggle">
+                <button 
+                    type="button" 
+                    className={currency === 'USD' ? 'active' : ''} 
+                    onClick={() => { setCurrency('USD'); setPaymentMethod('card'); }}
+                >
+                    USD ($)
+                </button>
+                <button 
+                    type="button" 
+                    className={currency === 'BDT' ? 'active' : ''} 
+                    onClick={() => setCurrency('BDT')}
+                >
+                    BDT (৳)
+                </button>
+            </div>
+        </div>
+
+        <div className="plan-grid">
+            {currentPlans.map(plan => (
+                <div 
+                    key={plan.id} 
+                    className={`plan-card ${selectedPlanId === plan.id ? 'selected' : ''}`}
+                    onClick={() => setSelectedPlanId(plan.id)}
+                >
+                    <div className="plan-credits">{plan.credits} Credits</div>
+                    <div className="plan-price">{plan.label}</div>
+                </div>
+            ))}
+        </div>
+
+        <form onSubmit={handlePay} className="payment-form">
+            <div className="payment-methods">
+                <label>Payment Method</label>
+                <div className="method-options">
+                    <label className={`method-option ${paymentMethod === 'card' ? 'selected' : ''}`}>
+                        <input 
+                            type="radio" 
+                            name="paymentMethod" 
+                            value="card" 
+                            checked={paymentMethod === 'card'} 
+                            onChange={(e) => setPaymentMethod(e.target.value)} 
+                        />
+                        <span>Credit Card</span>
+                    </label>
+                    {currency === 'BDT' && (
+                        <>
+                            <label className={`method-option ${paymentMethod === 'bkash' ? 'selected' : ''}`}>
+                                <input 
+                                    type="radio" 
+                                    name="paymentMethod" 
+                                    value="bkash" 
+                                    checked={paymentMethod === 'bkash'} 
+                                    onChange={(e) => setPaymentMethod(e.target.value)} 
+                                />
+                                <span>bKash</span>
+                            </label>
+                            <label className={`method-option ${paymentMethod === 'nagad' ? 'selected' : ''}`}>
+                                <input 
+                                    type="radio" 
+                                    name="paymentMethod" 
+                                    value="nagad" 
+                                    checked={paymentMethod === 'nagad'} 
+                                    onChange={(e) => setPaymentMethod(e.target.value)} 
+                                />
+                                <span>Nagad</span>
+                            </label>
+                        </>
+                    )}
+                </div>
+            </div>
+
+            <div className="payment-details">
+                {paymentMethod === 'card' ? (
+                    <div className="input-group">
+                        <input 
+                            type="text" 
+                            placeholder="Card Number" 
+                            required 
+                            className="payment-input" 
+                            value={cardNumber}
+                            onChange={(e) => setCardNumber(e.target.value)}
+                        />
+                        <div className="row">
+                            <input type="text" placeholder="MM/YY" required className="payment-input" />
+                            <input type="text" placeholder="CVC" required className="payment-input" />
+                        </div>
+                    </div>
+                ) : (
+                    <div className="input-group">
+                        <input 
+                            type="tel" 
+                            placeholder={`${paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} Account Number`} 
+                            required 
+                            className="payment-input" 
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                        />
+                    </div>
+                )}
+            </div>
+
+            <button type="submit" className="pay-button" disabled={processing}>
+                {processing ? 'Processing...' : `Pay ${selectedPlan.label}`}
+            </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 
 const FloorPlanGeneratorApp = ({ userEmail, onLogout }: { userEmail: string, onLogout: () => void }) => {
   const [prompt, setPrompt] = useState('');
@@ -107,6 +268,13 @@ const FloorPlanGeneratorApp = ({ userEmail, onLogout }: { userEmail: string, onL
   const [outlineData, setOutlineData] = useState<OutlineData | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<StylePreset | null>(null);
   const [rooms, setRooms] = useState([{ id: 1, name: '', type: 'Bedroom' }]);
+
+  // Payment State
+  const [credits, setCredits] = useState(() => {
+    const saved = localStorage.getItem('floor-plan-credits');
+    return saved ? parseInt(saved, 10) : 3;
+  });
+  const [showPayment, setShowPayment] = useState(false);
 
   // Cropping State
   const [isCropping, setIsCropping] = useState(false);
@@ -125,9 +293,20 @@ const FloorPlanGeneratorApp = ({ userEmail, onLogout }: { userEmail: string, onL
   const [viewMode, setViewMode] = useState<ViewMode>('render');
   const [imageRenderedSize, setImageRenderedSize] = useState({ width: 0, height: 0, x: 0, y: 0 });
 
+  // Masking State
+  const [isMasking, setIsMasking] = useState(false);
+  const [maskPrompt, setMaskPrompt] = useState('');
+  const [brushSize, setBrushSize] = useState(40);
+  const [isDrawingMask, setIsDrawingMask] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const outputImageRef = useRef<HTMLImageElement>(null);
+  const maskCanvasRef = useRef<HTMLCanvasElement>(null);
+  const maskPaths = useRef<Array<Array<{x: number, y: number}>>>([]);
+
+  useEffect(() => {
+    localStorage.setItem('floor-plan-credits', credits.toString());
+  }, [credits]);
 
   useEffect(() => {
     if (generatedImage && outputImageRef.current) {
@@ -135,8 +314,8 @@ const FloorPlanGeneratorApp = ({ userEmail, onLogout }: { userEmail: string, onL
         
         const calculateSize = () => {
             if (!imgElement) return;
-            const { clientWidth, clientHeight } = imgElement;
-            setImageRenderedSize({ width: clientWidth, height: clientHeight, x: 0, y: 0 });
+            const { clientWidth, clientHeight, offsetLeft, offsetTop } = imgElement;
+            setImageRenderedSize({ width: clientWidth, height: clientHeight, x: offsetLeft, y: offsetTop });
         };
 
         if (imgElement.complete && imgElement.naturalWidth > 0) {
@@ -154,6 +333,16 @@ const FloorPlanGeneratorApp = ({ userEmail, onLogout }: { userEmail: string, onL
         };
     }
   }, [generatedImage]);
+
+  useEffect(() => {
+    if (isMasking && maskCanvasRef.current && outputImageRef.current) {
+        const imageRect = outputImageRef.current.getBoundingClientRect();
+        const canvas = maskCanvasRef.current;
+        canvas.width = imageRect.width;
+        canvas.height = imageRect.height;
+        redrawMask();
+    }
+  }, [isMasking]);
 
 
   const resetZoomAndPan = () => {
@@ -175,6 +364,9 @@ const FloorPlanGeneratorApp = ({ userEmail, onLogout }: { userEmail: string, onL
     setShowWireframe(false);
     setViewMode('render');
     setImageRenderedSize({ width: 0, height: 0, x: 0, y: 0 });
+    setIsMasking(false);
+    setMaskPrompt('');
+    maskPaths.current = [];
     resetZoomAndPan();
   };
 
@@ -289,7 +481,7 @@ const FloorPlanGeneratorApp = ({ userEmail, onLogout }: { userEmail: string, onL
   };
 
   const generateDxfContent = (plan: ArchitecturalPlan): string => {
-    let dxf = '999\nDXF generated by Floor plan Generator\n';
+    let dxf = '999\nDXF generated by Dream Canvas\n';
     dxf += '0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1009\n0\nENDSEC\n';
     
     dxf += '0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n70\n4\n';
@@ -329,7 +521,7 @@ const FloorPlanGeneratorApp = ({ userEmail, onLogout }: { userEmail: string, onL
   }
 
     const generateOutlineDxfContent = (data: OutlineData): string => {
-        let dxf = '999\nDXF generated by Floor plan Generator\n';
+        let dxf = '999\nDXF generated by Dream Canvas\n';
         // HEADER
         dxf += '0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1009\n0\nENDSEC\n';
         // TABLES (Layer definition)
@@ -481,13 +673,20 @@ const FloorPlanGeneratorApp = ({ userEmail, onLogout }: { userEmail: string, onL
     e.preventDefault();
     if (!prompt || isLoading) return;
 
-    if ((mode === 'image-to-interior' || mode === 'outline') && !inputImage) {
+    if (credits <= 0) {
+        setShowPayment(true);
+        return;
+    }
+
+    if ((mode === 'image-to-image' || mode === 'image-to-interior' || mode === 'outline') && !inputImage) {
         setError(`Please upload an image for ${mode} mode.`);
         return;
     }
 
     setIsLoading(true);
     setLoadingMessage('Conjuring pixels... Your vision is materializing.');
+    // Deduct credit
+    setCredits(prev => prev - 1);
     resetOutputs();
 
     try {
@@ -611,7 +810,7 @@ Rooms to include:\n${roomDescriptions}`;
                 }
             }
           }
-      } else if (mode === 'image-to-interior' && inputImage) {
+      } else if ((mode === 'image-to-image' || mode === 'image-to-interior') && inputImage) {
         const imagePart = { inlineData: { mimeType: inputImage.mimeType, data: inputImage.base64 } };
         const textPart = { text: prompt };
 
@@ -709,6 +908,9 @@ Rooms to include:\n${roomDescriptions}`;
       }
     } catch (err: any) {
       console.error("AI Generation Error:", err);
+      // Refund on error
+      setCredits(prev => prev + 1);
+
       let errorMessage = 'An unexpected error occurred. Please try again later.';
       const message = err?.message || String(err);
 
@@ -913,9 +1115,246 @@ Rooms to include:\n${roomDescriptions}`;
         }
         setActiveFilter(null);
     }
+    
+  // Masking Handlers
+  const handleStartMasking = () => {
+    setIsMasking(true);
+    resetZoomAndPan();
+    setIsCropping(false);
+    setCropRect(null);
+  };
+  
+  const handleCancelMasking = () => {
+    setIsMasking(false);
+    setMaskPrompt('');
+    maskPaths.current = [];
+    if (maskCanvasRef.current) {
+        const ctx = maskCanvasRef.current.getContext('2d');
+        ctx?.clearRect(0, 0, maskCanvasRef.current.width, maskCanvasRef.current.height);
+    }
+  };
+
+  const getPointOnCanvas = (e: React.MouseEvent) => {
+    if (!maskCanvasRef.current) return null;
+    const canvas = maskCanvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    // Convert viewport coordinates (e.g., from a click) to canvas-local coordinates,
+    // accounting for any CSS transforms (like zoom and pan) on the canvas.
+    const x = ((e.clientX - rect.left) / rect.width) * canvas.width;
+    const y = ((e.clientY - rect.top) / rect.height) * canvas.height;
+    return { x, y };
+  };
+
+  const redrawMask = () => {
+    if (!maskCanvasRef.current) return;
+    const canvas = maskCanvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)'; // semi-transparent red
+    ctx.lineWidth = brushSize; 
+
+    maskPaths.current.forEach(path => {
+        if(path.length < 2) { // Draw a dot for single clicks
+            if (path.length === 1) {
+                ctx.beginPath();
+                ctx.arc(path[0].x, path[0].y, brushSize / 2, 0, 2 * Math.PI);
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.7)';
+                ctx.fill();
+            }
+            return;
+        }
+        ctx.beginPath();
+        ctx.moveTo(path[0].x, path[0].y);
+        for (let i = 1; i < path.length; i++) {
+            ctx.lineTo(path[i].x, path[i].y);
+        }
+        ctx.stroke();
+    });
+  };
+
+  const handleMaskMouseDown = (e: React.MouseEvent) => {
+    setIsDrawingMask(true);
+    const point = getPointOnCanvas(e);
+    if (point) {
+        maskPaths.current.push([point]);
+        redrawMask();
+    }
+  };
+
+  const handleMaskMouseMove = (e: React.MouseEvent) => {
+    if (!isDrawingMask) return;
+    const point = getPointOnCanvas(e);
+    if (point) {
+        const currentPath = maskPaths.current[maskPaths.current.length - 1];
+        currentPath.push(point);
+        redrawMask();
+    }
+  };
+
+  const handleMaskMouseUp = () => {
+    setIsDrawingMask(false);
+  };
+  
+  const handleUndoMask = () => {
+      maskPaths.current.pop();
+      redrawMask();
+  };
+  
+  const handleClearMask = () => {
+      maskPaths.current = [];
+      redrawMask();
+  };
+
+  const handleConfirmEdit = async () => {
+      if (!maskPrompt || maskPaths.current.length === 0 || !generatedImage) return;
+
+      setIsLoading(true);
+      setLoadingMessage('Applying magical corrections...');
+      setIsMasking(false);
+
+      try {
+          const image = new Image();
+          image.crossOrigin = "anonymous";
+          const imageLoadPromise = new Promise((resolve, reject) => {
+              image.onload = resolve;
+              image.onerror = reject;
+          });
+          image.src = generatedImage;
+          await imageLoadPromise;
+          
+          const naturalWidth = image.naturalWidth;
+          const naturalHeight = image.naturalHeight;
+          
+          if (!outputImageRef.current) throw new Error("Image reference not found");
+          const displayedWidth = outputImageRef.current.clientWidth;
+          const displayedHeight = outputImageRef.current.clientHeight;
+
+          const scaleX = naturalWidth / displayedWidth;
+          const scaleY = naturalHeight / displayedHeight;
+
+          // 1. Create Input Canvas (Image with Hole)
+          const inputCanvas = document.createElement('canvas');
+          inputCanvas.width = naturalWidth;
+          inputCanvas.height = naturalHeight;
+          const ctx = inputCanvas.getContext('2d', { willReadFrequently: true });
+          if (!ctx) throw new Error("Could not create canvas context");
+
+          ctx.drawImage(image, 0, 0);
+
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          
+          // Helper to draw paths with consistent scaling
+          const drawPaths = (context: CanvasRenderingContext2D) => {
+              maskPaths.current.forEach(path => {
+                  const scaledBrushSize = brushSize * Math.min(scaleX, scaleY);
+                  context.lineWidth = scaledBrushSize;
+                  if (path.length < 2) {
+                    if(path.length === 1) {
+                        context.beginPath();
+                        context.arc(path[0].x * scaleX, path[0].y * scaleY, scaledBrushSize / 2, 0, 2 * Math.PI);
+                        context.fill();
+                    }
+                    return;
+                  };
+                  context.beginPath();
+                  context.moveTo(path[0].x * scaleX, path[0].y * scaleY);
+                  for (let i = 1; i < path.length; i++) {
+                      context.lineTo(path[i].x * scaleX, path[i].y * scaleY);
+                  }
+                  context.stroke();
+              });
+          };
+
+          drawPaths(ctx);
+          
+          const mimeType = 'image/png';
+          const maskedImageBase64 = inputCanvas.toDataURL(mimeType).split(',')[1];
+          
+          // API Call to fill the hole
+          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+          const imagePart = { inlineData: { mimeType, data: maskedImageBase64 } };
+          const finalPrompt = `${maskPrompt}. The transparent area in the image indicates the region to be edited/regenerated. Fill it in seamlessly matching the surrounding content.`;
+          const textPart = { text: finalPrompt };
+
+          const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash-image',
+            contents: { parts: [imagePart, textPart] },
+            config: { responseModalities: [Modality.IMAGE] },
+          });
+
+          let imageUrl: string | null = null;
+          if (response.candidates?.[0]?.content?.parts) {
+              for (const part of response.candidates[0].content.parts) {
+                  if (part.inlineData) {
+                      imageUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                      break;
+                  }
+              }
+          }
+
+          if (imageUrl) {
+              // 2. Composite Result: Only allow the AI result to show in the masked area.
+              //    Everything else must remain the original image.
+              const resultImage = new Image();
+              resultImage.crossOrigin = "anonymous";
+              await new Promise((resolve) => { resultImage.onload = resolve; resultImage.src = imageUrl!; });
+
+              const finalCanvas = document.createElement('canvas');
+              finalCanvas.width = naturalWidth;
+              finalCanvas.height = naturalHeight;
+              const fCtx = finalCanvas.getContext('2d');
+              if(!fCtx) throw new Error("Canvas context error");
+
+              // Draw original image first (base layer)
+              fCtx.drawImage(image, 0, 0);
+
+              // Create a mask layer from the brush strokes
+              const maskCanvas = document.createElement('canvas');
+              maskCanvas.width = naturalWidth;
+              maskCanvas.height = naturalHeight;
+              const mCtx = maskCanvas.getContext('2d');
+              if(!mCtx) throw new Error("Canvas context error");
+
+              // Draw the AI result onto the mask canvas
+              mCtx.drawImage(resultImage, 0, 0);
+              
+              // Apply the mask: keep the AI result ONLY where we drew the mask
+              mCtx.globalCompositeOperation = 'destination-in';
+              mCtx.lineCap = 'round';
+              mCtx.lineJoin = 'round';
+              drawPaths(mCtx); // Using destination-in, this keeps pixels only where we draw
+
+              // Composite the masked AI result onto the final canvas
+              fCtx.globalCompositeOperation = 'source-over';
+              fCtx.drawImage(maskCanvas, 0, 0);
+
+              const finalUrl = finalCanvas.toDataURL(mimeType);
+              
+              setOriginalImage(finalUrl);
+              setGeneratedImage(finalUrl);
+              maskPaths.current = [];
+              setMaskPrompt('');
+          } else {
+              throw new Error("The AI failed to return an edited image.");
+          }
+      } catch (err: any) {
+          console.error("AI Edit Error:", err);
+          setError(`Sorry, the correction failed: ${err.message}`);
+      } finally {
+          setIsLoading(false);
+      }
+  };
+
 
   const renderOutput = () => {
-    if (isLoading) {
+    // Show full-page loader only when there's no image yet.
+    if (isLoading && !generatedImage) {
       return (
         <div className="loading-state">
           <div className="spinner"></div>
@@ -939,11 +1378,11 @@ Rooms to include:\n${roomDescriptions}`;
       return (
         <div className="output-image-container">
             <div 
-                className={`image-wrapper ${!isCropping && generatedImage ? 'pannable' : ''} ${isPanning ? 'panning' : ''}`}
-                onMouseDown={handlePanMouseDown}
-                onMouseMove={isPanning ? handlePanMouseMove : undefined}
-                onMouseUp={isPanning ? handlePanMouseUp : undefined}
-                onMouseLeave={isPanning ? handlePanMouseUp : undefined}
+                className={`image-wrapper ${!isCropping && !isMasking && generatedImage ? 'pannable' : ''} ${isPanning ? 'panning' : ''}`}
+                onMouseDown={isMasking ? undefined : handlePanMouseDown}
+                onMouseMove={isPanning && !isMasking ? handlePanMouseMove : undefined}
+                onMouseUp={isPanning && !isMasking ? handlePanMouseUp : undefined}
+                onMouseLeave={isPanning && !isMasking ? handlePanMouseUp : undefined}
                 onWheel={!isCropping ? handleWheelZoom : undefined}
             >
                 <div 
@@ -993,6 +1432,19 @@ Rooms to include:\n${roomDescriptions}`;
                             </svg>
                         </div>
                     )}
+
+                    {isMasking && (
+                        <div className="mask-container">
+                            <canvas 
+                                ref={maskCanvasRef}
+                                className="mask-canvas"
+                                onMouseDown={handleMaskMouseDown}
+                                onMouseMove={handleMaskMouseMove}
+                                onMouseUp={handleMaskMouseUp}
+                                onMouseLeave={handleMaskMouseUp}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 {isCropping && viewMode === 'render' && (
@@ -1016,7 +1468,14 @@ Rooms to include:\n${roomDescriptions}`;
                         )}
                     </div>
                 )}
-                {generatedImage && !isCropping && (
+                
+                {isLoading && (
+                    <div className="loading-overlay">
+                        <div className="spinner"></div>
+                        <p>{loadingMessage}</p>
+                    </div>
+                )}
+                {generatedImage && !isCropping && !isMasking && !isLoading &&(
                     <div className="zoom-controls">
                         <button onClick={() => handleZoom('out')} aria-label="Zoom out">-</button>
                         <button onClick={resetZoomAndPan} aria-label="Reset zoom">Reset</button>
@@ -1024,58 +1483,101 @@ Rooms to include:\n${roomDescriptions}`;
                     </div>
                 )}
             </div>
-            {generatedImage && !isCropping && (
-                <div className="filter-controls">
-                    <button className={`filter-button ${activeFilter === 'grayscale' ? 'active' : ''}`} onClick={() => applyFilter('grayscale')} disabled={viewMode === 'groundTruth'}>Grayscale</button>
-                    <button className={`filter-button ${activeFilter === 'sepia' ? 'active' : ''}`} onClick={() => applyFilter('sepia')} disabled={viewMode === 'groundTruth'}>Sepia</button>
-                    <button className={`filter-button ${activeFilter === 'invert' ? 'active' : ''}`} onClick={() => applyFilter('invert')} disabled={viewMode === 'groundTruth'}>Invert</button>
-                    {planData && <button className={`filter-button ${showWireframe ? 'active' : ''}`} onClick={() => setShowWireframe(prev => !prev)} disabled={viewMode === 'groundTruth'}>Wireframe</button>}
-                    {planData && <button className={`filter-button ${viewMode === 'groundTruth' ? 'active' : ''}`} onClick={() => {
-                        const newMode = viewMode === 'render' ? 'groundTruth' : 'render';
-                        setViewMode(newMode);
-                        if (newMode === 'groundTruth') {
-                            setShowWireframe(false);
-                            removeFilters();
-                        }
-                    }}>Ground Truth</button>}
-                    <button className="filter-button reset-filter" onClick={removeFilters} disabled={!activeFilter || viewMode === 'groundTruth'}>Reset</button>
-                </div>
-            )}
-            <div className="output-actions">
-                {isCropping ? (
-                    <>
-                        <button onClick={handleConfirmCrop} className="action-button confirm-button" disabled={!cropRect || cropRect.width < 1 || cropRect.height < 1}>
-                           Confirm Crop
-                        </button>
-                        <button onClick={handleCancelCrop} className="action-button cancel-button">
-                           Cancel
-                        </button>
-                    </>
+            {!isLoading && (
+            <>
+                {isMasking ? (
+                    <div className="masking-toolbar">
+                        <div className="mask-brush-control">
+                            <label htmlFor="brush-size">Brush Size</label>
+                            <input 
+                                type="range" 
+                                id="brush-size" 
+                                min="5" 
+                                max="100" 
+                                value={brushSize}
+                                onChange={e => setBrushSize(Number(e.target.value))}
+                            />
+                            <span>{brushSize}px</span>
+                        </div>
+                        <div className="mask-actions">
+                            <button onClick={handleUndoMask} className="action-button" disabled={maskPaths.current.length === 0}>Undo</button>
+                            <button onClick={handleClearMask} className="action-button" disabled={maskPaths.current.length === 0}>Clear</button>
+                        </div>
+                        <textarea
+                            className="mask-prompt-input"
+                            placeholder="Describe the change for the masked area..."
+                            value={maskPrompt}
+                            onChange={e => setMaskPrompt(e.target.value)}
+                            rows={2}
+                        />
+                        <div className="mask-confirm-actions">
+                            <button onClick={handleConfirmEdit} className="action-button confirm-button" disabled={!maskPrompt || maskPaths.current.length === 0}>Apply Edit</button>
+                            <button onClick={handleCancelMasking} className="action-button cancel-button">Cancel</button>
+                        </div>
+                    </div>
                 ) : (
-                    <button onClick={() => {setIsCropping(true); resetZoomAndPan();}} className="action-button" disabled={viewMode === 'groundTruth'}>
-                        Crop Image
-                    </button>
+                <>
+                    {generatedImage && !isCropping && (
+                        <div className="filter-controls">
+                            <button className={`filter-button ${activeFilter === 'grayscale' ? 'active' : ''}`} onClick={() => applyFilter('grayscale')} disabled={viewMode === 'groundTruth'}>Grayscale</button>
+                            <button className={`filter-button ${activeFilter === 'sepia' ? 'active' : ''}`} onClick={() => applyFilter('sepia')} disabled={viewMode === 'groundTruth'}>Sepia</button>
+                            <button className={`filter-button ${activeFilter === 'invert' ? 'active' : ''}`} onClick={() => applyFilter('invert')} disabled={viewMode === 'groundTruth'}>Invert</button>
+                            {planData && <button className={`filter-button ${showWireframe ? 'active' : ''}`} onClick={() => setShowWireframe(prev => !prev)} disabled={viewMode === 'groundTruth'}>Wireframe</button>}
+                            {planData && <button className={`filter-button ${viewMode === 'groundTruth' ? 'active' : ''}`} onClick={() => {
+                                const newMode = viewMode === 'render' ? 'groundTruth' : 'render';
+                                setViewMode(newMode);
+                                if (newMode === 'groundTruth') {
+                                    setShowWireframe(false);
+                                    removeFilters();
+                                }
+                            }}>Ground Truth</button>}
+                            <button className="filter-button reset-filter" onClick={removeFilters} disabled={!activeFilter || viewMode === 'groundTruth'}>Reset</button>
+                        </div>
+                    )}
+                    <div className="output-actions">
+                        {isCropping ? (
+                            <>
+                                <button onClick={handleConfirmCrop} className="action-button confirm-button" disabled={!cropRect || cropRect.width < 1 || cropRect.height < 1}>
+                                Confirm Crop
+                                </button>
+                                <button onClick={handleCancelCrop} className="action-button cancel-button">
+                                Cancel
+                                </button>
+                            </>
+                        ) : (
+                        <>
+                                <button onClick={handleStartMasking} className="action-button" disabled={viewMode === 'groundTruth'}>
+                                    Edit with Mask
+                                </button>
+                                <button onClick={() => {setIsCropping(true); resetZoomAndPan();}} className="action-button" disabled={viewMode === 'groundTruth'}>
+                                    Crop Image
+                                </button>
+                            </>
+                        )}
+                        {showWireframe && planData && (
+                            <>
+                                <button onClick={() => handleDownload('floorplan.svg', document.querySelector('.wireframe-overlay')!.innerHTML, 'image/svg+xml')} className="action-button">Download SVG</button>
+                                <button onClick={() => handleDownload('floorplan.dxf', generateDxfContent(planData), 'application/dxf')} className="action-button">Download DXF</button>
+                            </>
+                        )}
+                        {mode === 'outline' && outlineData && (
+                            <>
+                                <button onClick={() => handleDownload('outline.svg', generateOutlineSvgContent(outlineData), 'image/svg+xml')} className="action-button">Download SVG</button>
+                                <button onClick={() => handleDownload('outline.dxf', generateOutlineDxfContent(outlineData), 'application/dxf')} className="action-button">Download DXF</button>
+                            </>
+                        )}
+                        {viewMode === 'groundTruth' && planData && (
+                            <>
+                                <button onClick={() => handleDownload('ground-truth.dxf', generateDxfContent(planData), 'application/dxf')} className="action-button">Download DXF</button>
+                                <button onClick={() => handleDownload('ground-truth.svg', generateGroundTruthSvgContent(planData), 'image/svg+xml')} className="action-button">Download SVG</button>
+                                <button onClick={() => handleDownload('ground-truth.xml', generateGroundTruthXmlContent(planData), 'application/xml')} className="action-button">Download XML</button>
+                            </>
+                        )}
+                    </div>
+                </>
                 )}
-                {showWireframe && planData && (
-                    <>
-                        <button onClick={() => handleDownload('floorplan.svg', document.querySelector('.wireframe-overlay')!.innerHTML, 'image/svg+xml')} className="action-button">Download SVG</button>
-                        <button onClick={() => handleDownload('floorplan.dxf', generateDxfContent(planData), 'application/dxf')} className="action-button">Download DXF</button>
-                    </>
-                )}
-                {mode === 'outline' && outlineData && (
-                     <>
-                        <button onClick={() => handleDownload('outline.svg', generateOutlineSvgContent(outlineData), 'image/svg+xml')} className="action-button">Download SVG</button>
-                        <button onClick={() => handleDownload('outline.dxf', generateOutlineDxfContent(outlineData), 'application/dxf')} className="action-button">Download DXF</button>
-                    </>
-                )}
-                {viewMode === 'groundTruth' && planData && (
-                     <>
-                        <button onClick={() => handleDownload('ground-truth.dxf', generateDxfContent(planData), 'application/dxf')} className="action-button">Download DXF</button>
-                        <button onClick={() => handleDownload('ground-truth.svg', generateGroundTruthSvgContent(planData), 'image/svg+xml')} className="action-button">Download SVG</button>
-                        <button onClick={() => handleDownload('ground-truth.xml', generateGroundTruthXmlContent(planData), 'application/xml')} className="action-button">Download XML</button>
-                    </>
-                )}
-            </div>
+            </>
+            )}
         </div>
       );
     }
@@ -1103,7 +1605,8 @@ Rooms to include:\n${roomDescriptions}`;
                     {
                         mode === 'architectural' ? "Upload a sketch, plan, or point cloud slice" :
                         mode === 'outline' ? "Upload an image to create an outline from" :
-                        "Upload an image of a room to redesign"
+                        mode === 'image-to-interior' ? "Upload an image of a room" :
+                        "Upload an image to transform"
                     }
                 </span>
             </button>
@@ -1141,16 +1644,32 @@ Rooms to include:\n${roomDescriptions}`;
 
   return (
     <main className="app-container">
+      {showPayment && (
+        <PaymentModal 
+            onClose={() => setShowPayment(false)} 
+            onSuccess={(amount) => {
+                setCredits(prev => prev + amount);
+                setShowPayment(false);
+                setError(null); // Clear error if payment was triggered by error
+            }} 
+        />
+      )}
       <section className="input-section">
         <header>
           <div className="app-header">
-            <h1>Floor plan Generator</h1>
+            <h1>Dream Canvas</h1>
             <div className="user-info">
               <span className="user-email" title={userEmail}>{userEmail}</span>
               <button onClick={onLogout} className="logout-button" aria-label="Logout">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
               </button>
             </div>
+          </div>
+          <div className="credit-display">
+            <span>Credits: <strong>{credits}</strong></span>
+            <button onClick={() => setShowPayment(true)} className="buy-credits-button">
+                Buy Credits
+            </button>
           </div>
           <p>
             Turn your imagination into stunning architectural and interior designs. Describe what you want
@@ -1160,19 +1679,21 @@ Rooms to include:\n${roomDescriptions}`;
         <form className="prompt-form" onSubmit={handleGenerate}>
             <div className="mode-switcher">
                 <button type="button" className={mode === 'text-to-image' ? 'active' : ''} onClick={() => handleModeChange('text-to-image')}>Text to Image</button>
+                <button type="button" className={mode === 'image-to-image' ? 'active' : ''} onClick={() => handleModeChange('image-to-image')}>Image to Image</button>
                 <button type="button" className={mode === 'image-to-interior' ? 'active' : ''} onClick={() => handleModeChange('image-to-interior')}>Image to Interior</button>
-                <button type="button" className={mode === 'outline' ? 'active' : ''} onClick={() => handleModeChange('outline')}>Outline</button>
-                <button type="button" className={mode === 'architectural' ? 'active' : ''} onClick={() => handleModeChange('architectural')}>Architectural Plan</button>
+                <button type="button" className={mode === 'outline' ? 'active' : ''} onClick={() => handleModeChange('outline')}>Outline (Development Phase)</button>
+                <button type="button" className={mode === 'architectural' ? 'active' : ''} onClick={() => handleModeChange('architectural')}>Architectural Plan (Development Phase)</button>
             </div>
             
-            {(mode === 'image-to-interior' || mode === 'architectural' || mode === 'outline') && renderImageUploader()}
+            {(mode === 'image-to-image' || mode === 'architectural' || mode === 'outline' || mode === 'image-to-interior') && renderImageUploader()}
 
             <label htmlFor="prompt-input">Your Prompt</label>
             <textarea
               id="prompt-input"
               placeholder={
                 mode === 'text-to-image' ? "e.g., A majestic lion wearing a crown, cinematic lighting" : 
-                mode === 'image-to-interior' ? "e.g., Change the sofa to a blue velvet one, modern style" :
+                mode === 'image-to-image' ? "e.g., Change the sofa to a blue velvet one, modern style" :
+                mode === 'image-to-interior' ? "e.g., Redesign this living room in a modern minimalist style" :
                 mode === 'outline' ? "e.g., Use thicker lines for the main subject" :
                 "e.g., A modern 2-bedroom apartment with an open kitchen, rendered in a photorealistic style"
               }
@@ -1184,7 +1705,7 @@ Rooms to include:\n${roomDescriptions}`;
             
             {mode === 'architectural' && renderArchitecturalInputs()}
 
-            {(mode === 'text-to-image' || mode === 'image-to-interior') && (
+            {(mode === 'text-to-image' || mode === 'image-to-image' || mode === 'image-to-interior') && (
               <div className="style-presets">
                 {(Object.keys(stylePresets) as Array<StylePreset>).map((style) => (
                   <button
@@ -1202,9 +1723,9 @@ Rooms to include:\n${roomDescriptions}`;
             <button
               type="submit"
               className="generate-button"
-              disabled={isLoading || !prompt || ((mode === 'image-to-interior' || mode === 'outline') && !inputImage) || (mode === 'architectural' && rooms.some(r => !r.name))}
+              disabled={isLoading || !prompt || ((mode === 'image-to-image' || mode === 'image-to-interior' || mode === 'outline') && !inputImage) || (mode === 'architectural' && rooms.some(r => !r.name))}
             >
-              {isLoading ? 'Generating...' : 'Generate'}
+              {isLoading ? 'Generating...' : `Generate (1 Credit)`}
             </button>
           </form>
       </section>

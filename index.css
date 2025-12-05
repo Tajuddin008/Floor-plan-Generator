@@ -1,3 +1,4 @@
+
 :root {
   --font-body: 'Inter', sans-serif;
   --font-special: 'Permanent Marker', cursive;
@@ -201,6 +202,40 @@ body {
   background-color: var(--surface-dark);
 }
 
+/* Credit Display */
+.credit-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--background-dark);
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-dark);
+}
+
+.credit-display span {
+    font-size: 0.9rem;
+    color: var(--text-neutral-200);
+}
+.credit-display strong {
+    color: var(--yellow-primary);
+}
+
+.buy-credits-button {
+    background-color: transparent;
+    border: 1px solid var(--yellow-primary);
+    color: var(--yellow-primary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.buy-credits-button:hover {
+    background-color: rgba(250, 204, 21, 0.1);
+}
+
 
 .input-section header p {
   color: var(--text-neutral-400);
@@ -298,14 +333,16 @@ body {
 /* Mode Switcher */
 .mode-switcher {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
   background-color: var(--background-dark);
   border-radius: 8px;
-  padding: 4px;
+  padding: 8px;
   border: 1px solid var(--border-dark);
 }
 .mode-switcher button {
-  flex: 1;
-  padding: 0.5rem;
+  width: 100%;
+  padding: 0.75rem;
   border: none;
   background-color: transparent;
   color: var(--text-neutral-400);
@@ -313,6 +350,9 @@ body {
   cursor: pointer;
   font-weight: 600;
   transition: background-color 0.2s, color 0.2s;
+  font-size: 0.9rem;
+  white-space: normal;
+  text-align: center;
 }
 .mode-switcher button.active {
   background-color: var(--yellow-primary);
@@ -340,6 +380,7 @@ body {
     color: var(--text-neutral-400);
     cursor: pointer;
     transition: border-color 0.2s, color 0.2s;
+    text-align: center;
 }
 .upload-placeholder:hover {
     border-color: var(--yellow-primary);
@@ -497,6 +538,25 @@ body {
   to {
     transform: rotate(360deg);
   }
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(17, 24, 39, 0.85); /* var(--background-dark) with opacity */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    z-index: 20;
+    color: var(--text-neutral-200);
+    text-align: center;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 
 .error-state {
@@ -692,6 +752,7 @@ body {
     background-color: rgba(31, 41, 55, 0.8);
     padding: 0.5rem;
     border-radius: 8px;
+    z-index: 10;
 }
 .zoom-controls button {
     width: 32px;
@@ -743,6 +804,284 @@ body {
 .filter-button.reset-filter:disabled,
 .filter-button:disabled {
     opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Masking UI */
+.mask-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Pass clicks through to the canvas */
+}
+
+.mask-canvas {
+    cursor: crosshair;
+    pointer-events: all; /* Receive clicks on the canvas itself */
+}
+
+.masking-toolbar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: var(--surface-dark);
+    border: 1px solid var(--border-dark);
+    border-radius: 8px;
+    width: 100%;
+    max-width: 500px;
+}
+
+.mask-brush-control {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.mask-brush-control label {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.mask-brush-control input[type="range"] {
+    flex-grow: 1;
+}
+
+.mask-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.mask-prompt-input {
+    background-color: var(--background-dark);
+    border: 1px solid var(--border-dark);
+    color: var(--text-neutral-200);
+    border-radius: 6px;
+    padding: 0.75rem;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    resize: vertical;
+}
+.mask-prompt-input:focus {
+    outline: none;
+    border-color: var(--yellow-primary);
+    box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.5);
+}
+
+.mask-confirm-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+/* Modal and Payment Styles */
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background-color: var(--surface-dark);
+    border-radius: 12px;
+    border: 1px solid var(--border-dark);
+    padding: 2rem;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.modal-header h2 {
+    color: var(--yellow-primary);
+    font-family: var(--font-special);
+    font-size: 2rem;
+}
+
+.close-modal-button {
+    background: transparent;
+    border: none;
+    color: var(--text-neutral-400);
+    font-size: 2rem;
+    cursor: pointer;
+    line-height: 1;
+}
+.close-modal-button:hover {
+    color: var(--text-neutral-200);
+}
+
+.currency-toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.currency-toggle-container label {
+    color: var(--text-neutral-200);
+    font-weight: 600;
+}
+
+.currency-toggle {
+    display: flex;
+    background-color: var(--background-dark);
+    border-radius: 6px;
+    padding: 2px;
+    border: 1px solid var(--border-dark);
+}
+.currency-toggle button {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: transparent;
+    color: var(--text-neutral-400);
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.currency-toggle button.active {
+    background-color: var(--yellow-primary);
+    color: var(--text-neutral-700);
+}
+
+.plan-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.plan-card {
+    background-color: var(--background-dark);
+    border: 1px solid var(--border-dark);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.plan-card:hover {
+    border-color: var(--text-neutral-500);
+}
+.plan-card.selected {
+    border-color: var(--yellow-primary);
+    background-color: rgba(250, 204, 21, 0.05);
+    box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.2);
+}
+
+.plan-credits {
+    color: var(--text-neutral-400);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+.plan-price {
+    color: var(--text-neutral-200);
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+.plan-card.selected .plan-price {
+    color: var(--yellow-primary);
+}
+
+.payment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.payment-methods label {
+    display: block;
+    color: var(--text-neutral-200);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+.method-options {
+    display: flex;
+    gap: 1rem;
+}
+.method-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--background-dark);
+    padding: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-dark);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.method-option:hover {
+    border-color: var(--text-neutral-500);
+}
+.method-option.selected {
+    border-color: var(--yellow-primary);
+    background-color: rgba(250, 204, 21, 0.05);
+}
+.method-option input {
+    accent-color: var(--yellow-primary);
+}
+.method-option span {
+    font-size: 0.9rem;
+    color: var(--text-neutral-200);
+}
+
+.payment-details .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.payment-details .row {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.payment-input {
+    width: 100%;
+    background-color: var(--background-dark);
+    border: 1px solid var(--border-dark);
+    color: var(--text-neutral-200);
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-family: var(--font-body);
+}
+.payment-input:focus {
+    outline: none;
+    border-color: var(--yellow-primary);
+}
+
+.pay-button {
+    background-color: var(--yellow-primary);
+    color: var(--text-neutral-700);
+    border: none;
+    padding: 1rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.pay-button:hover {
+    background-color: var(--yellow-secondary);
+}
+.pay-button:disabled {
+    opacity: 0.6;
     cursor: not-allowed;
 }
 
